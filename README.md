@@ -1,4 +1,4 @@
-***~ Isekai Tales Saga Chronicle 3 ~***
+_**Isekai Tales Saga Chronicle 3**_
 
 우리의 꿈과 희망을 찾아, 세상을 구하기 위해!
 
