@@ -45,71 +45,6 @@ public class Battle : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // test code
-        BattleGlobal.userUnitList = new List<Unit>
-        {
-            new PlayerUnit(
-                GameObject.Instantiate(test),
-                "unit 1",
-                14,10, 
-                false, 
-                1, TargetRangeType.SINGLE, TargetSelectionType.FROM_ENEMY,
-                100,
-                ul => {
-                    if (ul.Count != 0)
-                    {
-                        Debug.LogFormat("{0} skill to {1}", this.name, ul.First().name);
-                        ul.First().GetDamage(15);
-                    }
-                }
-            ),
-            new PlayerUnit(
-                GameObject.Instantiate(test),
-                "unit 2",
-                13,10, 
-                false, 
-                2, TargetRangeType.ALL, TargetSelectionType.FROM_ENEMY,
-                100,
-                ul => {
-                    if (ul.Count != 0)
-                    {
-                        Debug.LogFormat("{0} skill to {1}", this.name, String.Join(", ", ul.Select(u => u.name)));
-                        ul.ForEach(tu => tu.GetDamage(5));
-                    }
-                }
-            ),
-            new PlayerUnit(
-                GameObject.Instantiate(test),
-                "unit 3",
-                12,10, 
-                false, 
-                3, TargetRangeType.SINGLE, TargetSelectionType.FROM_ALLY,
-                100,
-                ul => {
-                    if (ul.Count != 0)
-                    {
-                        Debug.LogFormat("{0} skill to {1}", this.name, ul.First().name);
-                        ul.First().GetDamage(-15);
-                    }
-                }
-            ),
-            new PlayerUnit(
-                GameObject.Instantiate(test),
-                "unit 4",
-                11,10, 
-                false, 
-                4, TargetRangeType.ALL, TargetSelectionType.FROM_ALLY,
-                100,
-                ul => {
-                    if (ul.Count != 0)
-                    {
-                        Debug.LogFormat("skill to {0}", ul.First().name);
-                        ul.ForEach(tu => tu.GetDamage(-5));
-                    }
-                }
-            )
-        };
-
         // 배틀 시작 시에 init 하기
         totalUnitList = new List<Unit>();
         initiateEnemyUnit();
@@ -179,6 +114,73 @@ public class Battle : MonoBehaviour
 
     private void initiatePlayerUnit()
     {
+        // test code
+        if (BattleGlobal.userUnitList == null || BattleGlobal.userUnitList.Count == 0)
+        {
+            BattleGlobal.userUnitList = new List<Unit>
+            {
+                new PlayerUnit(
+                    GameObject.Instantiate(test),
+                    "unit 1",
+                    14,10, 
+                    false, 
+                    1, TargetRangeType.SINGLE, TargetSelectionType.FROM_ENEMY,
+                    100,
+                    ul => {
+                        if (ul.Count != 0)
+                        {
+                            Debug.LogFormat("{0} skill to {1}", this.name, ul.First().name);
+                            ul.First().GetDamage(15);
+                        }
+                    }
+                ),
+                new PlayerUnit(
+                    GameObject.Instantiate(test),
+                    "unit 2",
+                    13,10, 
+                    false, 
+                    2, TargetRangeType.ALL, TargetSelectionType.FROM_ENEMY,
+                    100,
+                    ul => {
+                        if (ul.Count != 0)
+                        {
+                            Debug.LogFormat("{0} skill to {1}", this.name, String.Join(", ", ul.Select(u => u.name)));
+                            ul.ForEach(tu => tu.GetDamage(5));
+                        }
+                    }
+                ),
+                new PlayerUnit(
+                    GameObject.Instantiate(test),
+                    "unit 3",
+                    12,10, 
+                    false, 
+                    3, TargetRangeType.SINGLE, TargetSelectionType.FROM_ALLY,
+                    100,
+                    ul => {
+                        if (ul.Count != 0)
+                        {
+                            Debug.LogFormat("{0} skill to {1}", this.name, ul.First().name);
+                            ul.First().GetDamage(-15);
+                        }
+                    }
+                ),
+                new PlayerUnit(
+                    GameObject.Instantiate(test),
+                    "unit 4",
+                    11,10, 
+                    false, 
+                    4, TargetRangeType.ALL, TargetSelectionType.FROM_ALLY,
+                    100,
+                    ul => {
+                        if (ul.Count != 0)
+                        {
+                            Debug.LogFormat("skill to {0}", ul.First().name);
+                            ul.ForEach(tu => tu.GetDamage(-5));
+                        }
+                    }
+                )
+            };
+        }
         // 유닛 소환
         // 및 queue 세팅
         // 및 현재 액티브 유닛 세팅.

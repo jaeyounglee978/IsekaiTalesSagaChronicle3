@@ -41,3 +41,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Backgroud
+    uniqueID: 2035922957
+    locked: 0
+  - name: Unit
+    uniqueID: 2494752203
+    locked: 0
