@@ -7,15 +7,9 @@ using UnityEngine;
 public abstract class NPC : Unit
 {
     private Action<List<Unit>> unitSkill;
-    
-    public NPC(GameObject gameObject,
-                      string name,
-                      int speed, int attack, 
-                      bool isInGuradPosition, 
-                      int skillCost, TargetRangeType targetRangeType, TargetSelectionType skillTargetType,
-                      int health,
-                      Action<List<Unit>> unitSkill)
-        : base(gameObject, name, speed, attack, isInGuradPosition, skillCost, targetRangeType, skillTargetType, health )
+
+    public NPC(GameObject gameObject, UnitData unitData, Action<List<Unit>> unitSkill)
+        : base(gameObject, unitData)
     {
         this.unitSkill = unitSkill;
     }
