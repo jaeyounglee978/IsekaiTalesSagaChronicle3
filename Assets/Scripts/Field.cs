@@ -15,8 +15,10 @@ public class Field : MonoBehaviour
     private float initPositionX = 100f;
     private float initPositionY = 100f;
     private float unitMoveTime = 0.25f;
-    private float blockUserInputTime = 0;
     private float unitMovementDelta = 100f;
+
+    private float blockUserInputUntil = -1;
+    private bool canUserMove = true;
 
     // Start is called before the first frame update
     void Start()
@@ -25,7 +27,7 @@ public class Field : MonoBehaviour
     }
 
     private void InitPlayerUnits()
-    {  
+    {
         // test code
         playerFieldUnits = new List<FieldUnit>
         {
@@ -48,7 +50,8 @@ public class Field : MonoBehaviour
         };
 
         var z = 4;
-        playerFieldUnits.ForEach(u => {
+        playerFieldUnits.ForEach(u =>
+        {
             u.gameObject.SetActive(true);
             u.gameObject.transform.SetParent(unitParent.transform);
             u.gameObject.transform.localPosition = new Vector2(initPositionX, initPositionY);
@@ -58,72 +61,71 @@ public class Field : MonoBehaviour
         });
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (blockUserInputTime <= 0)
+        var canMove = blockUserInputUntil < Time.time;
+
+        if (!canUserMove && canMove)
+        {
+            Debug.Log("move end");
+            if (IsEnemyEncountered())
+            {
+                LoadEnemyEncounterScene();
+            }
+            canUserMove = true;
+        }
+        if (canUserMove)
         {
             UserInput();
         }
-        else
-        {
-            blockUserInputTime -= Time.deltaTime;
-            if (blockUserInputTime <= 0)
-            {
-                Debug.Log("move end");
-                IsEnemyEncountered();
-            }
-        }
-        
     }
-    
-    private void IsEnemyEncountered() {
-        var r = UnityEngine.Random.Range(0, 1001);
 
-        if (r <= 300)
-        {
-            SceneManager.LoadScene("Battle", LoadSceneMode.Single);
-        }
+    private bool IsEnemyEncountered()
+    {
+        return UnityEngine.Random.value < 0.3;
+    }
+
+    private void LoadEnemyEncounterScene()
+    {
+        SceneManager.LoadScene("Battle", LoadSceneMode.Single);
     }
 
     private void UserInput()
     {
         var currentLeaderCoordinate = playerFieldUnits.First().gameObject.transform.localPosition;
 
-        Vector2 targetCoordinate = currentLeaderCoordinate;
+        Vector2 deltaPos = Vector2.zero;
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            targetCoordinate = CalculateTargetPosition(currentLeaderCoordinate, Vector2.up * unitMovementDelta);
-            blockUserInputTime = unitMoveTime;
+            deltaPos = Vector2.up;
         }
         else if (Input.GetKey(KeyCode.DownArrow))
         {
-            targetCoordinate = CalculateTargetPosition(currentLeaderCoordinate, Vector2.down * unitMovementDelta);
-            blockUserInputTime = unitMoveTime;
+            deltaPos = Vector2.down;
         }
         else if (Input.GetKey(KeyCode.LeftArrow))
         {
-            targetCoordinate = CalculateTargetPosition(currentLeaderCoordinate, Vector2.left * unitMovementDelta);
-            blockUserInputTime = unitMoveTime;
+            deltaPos = Vector2.left;
         }
         else if (Input.GetKey(KeyCode.RightArrow))
         {
-            targetCoordinate = CalculateTargetPosition(currentLeaderCoordinate, Vector2.right * unitMovementDelta);
-            blockUserInputTime = unitMoveTime;
+            deltaPos = Vector2.right;
         }
 
-        if (blockUserInputTime > 0) PlayerUnitMove(targetCoordinate);
+        if (deltaPos != Vector2.zero)
+        {
+            var targetCoordinate = CalculateTargetPosition(currentLeaderCoordinate, deltaPos * unitMovementDelta);
+            blockUserInputUntil = Time.time + unitMoveTime;
+            PlayerUnitMove(targetCoordinate);
+            canUserMove = false;
+        }
     }
 
-    private Vector2 CalculateTargetPosition(Vector2 currentPosition, Vector2 delta) {
+    private Vector2 CalculateTargetPosition(Vector2 currentPosition, Vector2 delta)
+    {
         var p = currentPosition + delta;
-
-        if (p.x <= 100) p.x = 100;
-        if (p.x >= 1080) p.x = 1080;
-
-        if (p.y <= 100) p.y = 100;
-        if (p.y >= 860) p.y = 860;
-
+        p.x = Clamp(p.x, 100, 1080);
+        p.y = Clamp(p.y, 100, 860);
         return p;
     }
 
@@ -132,10 +134,16 @@ public class Field : MonoBehaviour
         if (targetCoordinate == null) return;
 
         var tc = targetCoordinate;
-        playerFieldUnits.ForEach(pu => {
+        playerFieldUnits.ForEach(pu =>
+        {
             var tempTc = pu.gameObject.transform.localPosition;
             StartCoroutine(pu.move(tc, unitMoveTime));
             tc = tempTc;
         });
+    }
+
+    private static float Clamp(float value, float min, float max)
+    {
+        return Mathf.Max(Mathf.Min(value, max), min);
     }
 }

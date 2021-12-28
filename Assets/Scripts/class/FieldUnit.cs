@@ -5,17 +5,10 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class FieldUnit 
+public class FieldUnit
 {
-    public GameObject gameObject
-    {
-        get;
-    }
-    
-    public SpriteRenderer spriteRenderer
-    {
-        get;
-    }
+    public GameObject gameObject { get; }
+    public SpriteRenderer spriteRenderer { get; }
 
     public FieldUnit(GameObject gameObject, string spriteName)
     {
