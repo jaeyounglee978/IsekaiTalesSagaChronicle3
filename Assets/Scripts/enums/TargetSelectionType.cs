@@ -1,7 +1,7 @@
 public enum TargetSelectionType
 {
     DEFAULT,
-    FROM_ENEMY,
-    FROM_ALLY,
-    FROM_ALL
+    ENEMY,
+    ALLY,
+    ALL
 }

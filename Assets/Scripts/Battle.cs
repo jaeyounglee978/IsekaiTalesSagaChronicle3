@@ -93,7 +93,7 @@ public class Battle : MonoBehaviour
                     isInGuardPosition = false,
                     skillCost = 1,
                     targetRangeType = TargetRangeType.SINGLE,
-                    skillTargetType = TargetSelectionType.FROM_ENEMY,
+                    skillTargetType = TargetSelectionType.ENEMY,
                     maxHealth = 25,
                     initHealth = 25
                 },
@@ -109,7 +109,7 @@ public class Battle : MonoBehaviour
                     isInGuardPosition = false,
                     skillCost = 2,
                     targetRangeType = TargetRangeType.ALL,
-                    skillTargetType = TargetSelectionType.FROM_ENEMY,
+                    skillTargetType = TargetSelectionType.ENEMY,
                     maxHealth = 25,
                     initHealth = 25
                 },
@@ -147,7 +147,7 @@ public class Battle : MonoBehaviour
                         isInGuardPosition = false,
                         skillCost = 1,
                         targetRangeType = TargetRangeType.SINGLE,
-                        skillTargetType = TargetSelectionType.FROM_ENEMY,
+                        skillTargetType = TargetSelectionType.ENEMY,
                         maxHealth = 100,
                         initHealth = 100
                     },
@@ -168,7 +168,7 @@ public class Battle : MonoBehaviour
                         isInGuardPosition = false,
                         skillCost = 2,
                         targetRangeType = TargetRangeType.ALL,
-                        skillTargetType = TargetSelectionType.FROM_ENEMY,
+                        skillTargetType = TargetSelectionType.ENEMY,
                         maxHealth = 100,
                         initHealth = 100
                     },
@@ -189,7 +189,7 @@ public class Battle : MonoBehaviour
                         isInGuardPosition = false,
                         skillCost = 3,
                         targetRangeType = TargetRangeType.SINGLE,
-                        skillTargetType = TargetSelectionType.FROM_ALLY,
+                        skillTargetType = TargetSelectionType.ALLY,
                         maxHealth = 100,
                         initHealth = 100
                     },
@@ -210,7 +210,7 @@ public class Battle : MonoBehaviour
                         isInGuardPosition = false,
                         skillCost = 4,
                         targetRangeType = TargetRangeType.ALL,
-                        skillTargetType = TargetSelectionType.FROM_ALLY,
+                        skillTargetType = TargetSelectionType.ALLY,
                         maxHealth = 100,
                         initHealth = 100
                     },
@@ -305,7 +305,7 @@ public class Battle : MonoBehaviour
     {
         waitUserInput = true;
         waitUserTargetSelection = true;
-        selectFromType = TargetSelectionType.FROM_ENEMY;
+        selectFromType = TargetSelectionType.ENEMY;
         isTargetSingle = true;
         isUsingSkill = false;
         turnToTargetSelectUI();
@@ -567,255 +567,127 @@ public class Battle : MonoBehaviour
     // TODO : 선택된 타겟의 머리 위에 뭐 indicator 같은거 보여줘야함.
     private void waitTargetSelectInput()
     {
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            if (isTargetSingle)
+                SelectNextTarget(1);
+            else
+                SelectEveryTarget(selectFromType);
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            if (isTargetSingle)
+                SelectNextTarget(-1);
+            else
+                SelectEveryTarget(selectFromType);
+        }
+        else if (Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Escape))
+        {
+            UnselectTarget();
+        }
+        else if (Input.GetKeyDown(KeyCode.Return))
+        {
+            if (isTargetSingle)
+                ActivateSkill(new List<Unit>() { currentSelectedTarget });
+            else
+                ActivateSkill(currentSelectedTargetList);
+        }
+    }
+
+    private void SelectNextTarget(int offset)
+    {
         if (isTargetSingle)
         {
-            switch (selectFromType)
+            List<Unit> unitList = null;
+            if (selectFromType == TargetSelectionType.ALLY)
             {
-                case TargetSelectionType.FROM_ENEMY:
-                    if (Input.GetKeyDown(KeyCode.DownArrow))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (currentSelectedTarget == null)
-                        {
-                            currentSelectedTarget = enemyUnitList.First();
-                        }
-                        else
-                        {
-                            var idx = enemyUnitList.FindIndex(a => a.name.Equals(currentSelectedTarget.name));
-                            idx = (idx + 1) % enemyUnitList.Count();
-                            currentSelectedTarget = enemyUnitList[idx];
-                        }
-                        setIndicatorToSelectedTarget(currentSelectedTarget);
-                    }
-                    else if (Input.GetKeyDown(KeyCode.UpArrow))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (currentSelectedTarget == null)
-                        {
-                            currentSelectedTarget = enemyUnitList.Last();
-                        }
-                        else
-                        {
-                            var idx = enemyUnitList.FindIndex(a => a.name.Equals(currentSelectedTarget.name));
-                            if (idx == 0)
-                            {
-                                currentSelectedTarget = enemyUnitList.Last();
-                            }
-                            else
-                            {
-                                idx = (idx - 1) % enemyUnitList.Count();
-                                currentSelectedTarget = enemyUnitList[idx];
-                            }
-                        }
-                        setIndicatorToSelectedTarget(currentSelectedTarget);
-                    }
-                    else if (Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Escape))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        turnBackToCommandUI();
-                    }
-                    else if (Input.GetKeyDown(KeyCode.Return))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (isUsingSkill)
-                        {
-                            Unit[] uArray = { currentSelectedTarget };
-                            UseSkill(currentActiveUnit, new List<Unit>(uArray));
-                        }
-                        else
-                        {
-                            DoAttack(currentActiveUnit, currentSelectedTarget);
-                        }
-                    }
+                unitList = BattleGlobal.userUnitList;
+            }
+            else if (selectFromType == TargetSelectionType.ENEMY)
+            {
+                unitList = enemyUnitList;
+            }
+            else if (selectFromType == TargetSelectionType.ALL)
+            {
+                unitList = totalUnitList;
+            }
+
+            if (unitList != null)
+            {
+                unsetIndicatorFromSelectedTarget(currentSelectedTarget);
+                if (currentSelectedTarget == null)
+                {
+                    if (offset > 0)
+                        currentSelectedTarget = unitList.First();
+                    else
+                        currentSelectedTarget = unitList.Last();
+                }
+                else
+                {
+                    var idx = unitList.IndexOf(currentSelectedTarget);
+                    idx = GetNextIndex(idx, offset, unitList.Count());
+                    currentSelectedTarget = unitList[idx];
+                }
+                setIndicatorToSelectedTarget(currentSelectedTarget);
+            }
+        }
+    }
+
+    private void SelectEveryTarget(TargetSelectionType type)
+    {
+        if (currentSelectedTargetList == null)
+        {
+            switch (type)
+            {
+                case TargetSelectionType.ENEMY:
+                    currentSelectedTargetList = enemyUnitList;
                     break;
-                case TargetSelectionType.FROM_ALLY:
-                    if (Input.GetKeyDown(KeyCode.DownArrow))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (currentSelectedTarget == null)
-                        {
-                            currentSelectedTarget = BattleGlobal.userUnitList.First();
-                        }
-                        else
-                        {
-                            var idx = BattleGlobal.userUnitList.FindIndex(a => a.name.Equals(currentSelectedTarget.name));
-                            idx = (idx + 1) % BattleGlobal.userUnitList.Count();
-                            currentSelectedTarget = BattleGlobal.userUnitList[idx];
-                        }
-                        setIndicatorToSelectedTarget(currentSelectedTarget);
-                    }
-                    else if (Input.GetKeyDown(KeyCode.UpArrow))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (currentSelectedTarget == null)
-                        {
-                            currentSelectedTarget = BattleGlobal.userUnitList.Last();
-                        }
-                        else
-                        {
-                            var idx = BattleGlobal.userUnitList.FindIndex(a => a.name.Equals(currentSelectedTarget.name));
-                            if (idx == 0)
-                            {
-                                currentSelectedTarget = BattleGlobal.userUnitList.Last();
-                            }
-                            else
-                            {
-                                idx = (idx - 1) % BattleGlobal.userUnitList.Count();
-                                currentSelectedTarget = BattleGlobal.userUnitList[idx];
-                            }
-                        }
-                        setIndicatorToSelectedTarget(currentSelectedTarget);
-                    }
-                    else if (Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Escape))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        turnBackToCommandUI();
-                    }
-                    else if (Input.GetKeyDown(KeyCode.Return))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (isUsingSkill)
-                        {
-                            Unit[] uArray = { currentSelectedTarget };
-                            UseSkill(currentActiveUnit, new List<Unit>(uArray));
-                        }
-                        else
-                        {
-                            DoAttack(currentActiveUnit, currentSelectedTarget);
-                        }
-                    }
+                case TargetSelectionType.ALLY:
+                    currentSelectedTargetList = BattleGlobal.userUnitList;
                     break;
-                case TargetSelectionType.FROM_ALL:
-                    if (Input.GetKeyDown(KeyCode.DownArrow))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (currentSelectedTarget == null)
-                        {
-                            currentSelectedTarget = BattleGlobal.userUnitList.First();
-                        }
-                        else
-                        {
-                            var idx = BattleGlobal.userUnitList.FindIndex(a => a.name.Equals(currentSelectedTarget.name));
-                            idx = (idx + 1) % BattleGlobal.userUnitList.Count();
-                            currentSelectedTarget = BattleGlobal.userUnitList[idx];
-                        }
-                        setIndicatorToSelectedTarget(currentSelectedTarget);
-                    }
-                    else if (Input.GetKeyDown(KeyCode.UpArrow))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (currentSelectedTarget == null)
-                        {
-                            currentSelectedTarget = BattleGlobal.userUnitList.Last();
-                        }
-                        else
-                        {
-                            var idx = BattleGlobal.userUnitList.FindIndex(a => a.name.Equals(currentSelectedTarget.name));
-                            if (idx == 0)
-                            {
-                                currentSelectedTarget = BattleGlobal.userUnitList.Last();
-                            }
-                            else
-                            {
-                                idx = (idx - 1) % BattleGlobal.userUnitList.Count();
-                                currentSelectedTarget = BattleGlobal.userUnitList[idx];
-                            }
-                        }
-                        setIndicatorToSelectedTarget(currentSelectedTarget);
-                    }
-                    else if (Input.GetKeyDown(KeyCode.RightArrow))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (BattleGlobal.userUnitList.Contains(currentSelectedTarget))
-                        {
-                            currentSelectedTarget = enemyUnitList.First();
-                        }
-                        else if (enemyUnitList.Contains(currentSelectedTarget))
-                        {
-                            currentSelectedTarget = BattleGlobal.userUnitList.First();
-                        }
-                        else
-                        {
-                            currentSelectedTarget = enemyUnitList.First();
-                        }
-                        setIndicatorToSelectedTarget(currentSelectedTarget);
-                    }
-                    else if (Input.GetKeyDown(KeyCode.LeftArrow))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (BattleGlobal.userUnitList.Contains(currentSelectedTarget))
-                        {
-                            currentSelectedTarget = enemyUnitList.First();
-                        }
-                        else if (enemyUnitList.Contains(currentSelectedTarget))
-                        {
-                            currentSelectedTarget = BattleGlobal.userUnitList.First();
-                        }
-                        else
-                        {
-                            currentSelectedTarget = BattleGlobal.userUnitList.First();
-                        }
-                        setIndicatorToSelectedTarget(currentSelectedTarget);
-                    }
-                    else if (Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Escape))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        turnBackToCommandUI();
-                    }
-                    else if (Input.GetKeyDown(KeyCode.Return))
-                    {
-                        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
-                        if (isUsingSkill)
-                        {
-                            Unit[] uArray = { currentSelectedTarget };
-                            UseSkill(currentActiveUnit, new List<Unit>(uArray));
-                        }
-                        else
-                        {
-                            DoAttack(currentActiveUnit, currentSelectedTarget);
-                        }
-                    }
+                case TargetSelectionType.ALL:
+                    currentSelectedTargetList = totalUnitList;
                     break;
                 default:
                     break;
             }
+            setIndicatorToSelectedTarget(currentSelectedTargetList);
+        }
+    }
+
+    private void UnselectTarget()
+    {
+        unsetIndicatorFromSelectedTarget(currentSelectedTarget);
+        unsetIndicatorFromSelectedTarget(currentSelectedTargetList);
+        currentSelectedTarget = null;
+        currentSelectedTargetList.Clear();
+        turnBackToCommandUI();
+    }
+
+    private void ActivateSkill(List<Unit> target)
+    {
+        if (target == null || target.Count <= 0)
+            return;
+
+        unsetIndicatorFromSelectedTarget(target);
+        if (isUsingSkill)
+        {
+            UseSkill(currentActiveUnit, target);
         }
         else
         {
-            if (currentSelectedTargetList == null)
-            {
-                switch (selectFromType)
-                {
-                    case TargetSelectionType.FROM_ENEMY:
-                        currentSelectedTargetList = enemyUnitList;
-                        break;
-                    case TargetSelectionType.FROM_ALLY:
-                        currentSelectedTargetList = BattleGlobal.userUnitList;
-                        break;
-                    case TargetSelectionType.FROM_ALL:
-                        currentSelectedTargetList = new List<Unit>();
-                        currentSelectedTargetList.AddRange(enemyUnitList);
-                        currentSelectedTargetList.AddRange(BattleGlobal.userUnitList);
-                        break;
-                    default:
-                        break;
-                }
-                setIndicatorToSelectedTarget(currentSelectedTargetList);
-            }
-            else
-            {
-                if (Input.GetKeyDown(KeyCode.Return))
-                {
-                    unsetIndicatorFromSelectedTarget(currentSelectedTargetList);
-                    UseSkill(currentActiveUnit, currentSelectedTargetList);
-                }
-                else if (Input.GetKeyDown(KeyCode.Escape))
-                {
-                    unsetIndicatorFromSelectedTarget(currentSelectedTargetList);
-                    turnBackToCommandUI();
-                }
-            }
+            DoAttack(currentActiveUnit, target[0]);
         }
+    }
+
+    private int GetNextIndex(int from, int offset, int size)
+    {
+        var idx = (from + offset) % size;
+        while (idx < 0)
+        {
+            idx += size;
+        }
+        return idx;
     }
 
     private void setIndicatorToSelectedTarget(Unit target)
